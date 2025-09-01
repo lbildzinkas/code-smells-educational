@@ -1,0 +1,72 @@
+### Sample API Requests for Testing
+### Bad practice: storing test data with hardcoded values
+
+### Login as admin
+POST http://localhost:5000/api/main/Login
+Content-Type: application/json
+
+{
+  "email": "admin@store.com",
+  "password": "admin123"
+}
+
+### Add Product
+POST http://localhost:5000/api/main/AddProduct
+Content-Type: application/json
+
+{
+  "name": "Laptop",
+  "price": 999.99,
+  "stock": 10,
+  "description": "High-end gaming laptop"
+}
+
+### Get Product
+GET http://localhost:5000/api/main/GetProduct?id=1000
+
+### Search Products
+GET http://localhost:5000/api/main/SearchProducts?query=laptop&sortBy=Price&filterBy=expensive
+
+### Add to Cart
+POST http://localhost:5000/api/main/AddToCart
+Content-Type: application/json
+
+{
+  "id": 1000,
+  "name": "Laptop",
+  "price": 999.99,
+  "quantity": 1,
+  "category": "electronics"
+}
+
+### Get Cart
+GET http://localhost:5000/api/main/GetCart
+
+### Create Order
+POST http://localhost:5000/api/main/CreateOrder
+Content-Type: application/json
+
+{
+  "paymentMethod": "credit_card"
+}
+
+### Process Payment
+POST http://localhost:5000/api/main/ProcessPayment
+Content-Type: application/json
+
+{
+  "method": "credit_card",
+  "amount": 1149.99,
+  "cardNumber": "1234567890123456",
+  "cvv": "123",
+  "expiry": "12/25"
+}
+
+### Update Order Status
+PUT http://localhost:5000/api/main/UpdateOrderStatus?orderId=5000&newStatus=shipped
+
+### Get Stats (exposes internal state!)
+GET http://localhost:5000/api/main/GetStats
+
+### Logout
+POST http://localhost:5000/api/main/Logout

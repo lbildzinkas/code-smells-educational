@@ -1,0 +1,38 @@
+# .NET Core
+bin/
+obj/
+out/
+*.user
+*.suo
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Database data - Bad practice: we should ignore this
+# but students can see the data folder
+# sqldata/
+
+# Environment variables - Bad practice: we're committing .env
+# .env
+
+# Bad practice: not ignoring sensitive files
+# *.key
+# *.pem
+# secrets.json

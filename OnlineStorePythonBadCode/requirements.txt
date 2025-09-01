@@ -1,0 +1,29 @@
+# Bad practice: no version pinning - could break in the future
+fastapi
+uvicorn
+pyodbc
+
+# Bad practice: unnecessary dependencies
+requests
+numpy
+pandas
+beautifulsoup4
+selenium
+
+# Bad practice: development dependencies mixed with production
+pytest
+black
+flake8
+mypy
+
+# Bad practice: including dependencies we don't actually use
+redis
+celery
+gunicorn
+sqlalchemy
+alembic
+jinja2
+
+# Bad practice: no comments explaining why each dependency is needed
+# Bad practice: not using requirements-dev.txt for dev dependencies
+# Bad practice: not specifying Python version compatibility
