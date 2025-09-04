@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Data.SqlClient;
+using OnlineStoreBadCode.DTOs;
 
 namespace OnlineStoreBadCode.Controllers;
 
@@ -13,7 +14,7 @@ public class MainController : ControllerBase
     // ============ PRODUCT METHODS ============
     
     [HttpGet("GetProduct")]
-    public IActionResult GetProduct(string id)
+    public ActionResult<ProductResponseDto> GetProduct(string id)
     {
         try
         {
@@ -30,17 +31,19 @@ public class MainController : ControllerBase
                 // Bad practice: building response manually
                 if (reader.Read())
                 {
-                    var product = new Dictionary<string, object>();
-                    product["id"] = reader["ProductId"];
-                    product["name"] = reader["ProductName"];
-                    product["price"] = reader["Price"];
-                    product["stock"] = reader["Stock"];
-                    product["description"] = reader["Description"];
+                    var product = new ProductResponseDto
+                    {
+                        Id = (int)reader["ProductId"],
+                        Name = (string)reader["ProductName"],
+                        Price = (decimal)reader["Price"],
+                        Stock = (int)reader["Stock"],
+                        Description = (string)reader["Description"]
+                    };
                     
                     // Bad practice: magic number
-                    if ((decimal)product["price"] > 100)
+                    if (product.Price > 100)
                     {
-                        product["expensive"] = true;
+                        product.Expensive = true;
                     }
                     
                     return Ok(product);
@@ -59,13 +62,13 @@ public class MainController : ControllerBase
     }
     
     [HttpPost("AddProduct")]
-    public IActionResult AddProduct([FromBody] dynamic product)
+    public IActionResult AddProduct([FromBody] ProductRequestDto product)
     {
         // Bad practice: no validation
-        string name = product.name;
-        decimal price = product.price;
-        int stock = product.stock;
-        string description = product.description;
+        string name = product.Name;
+        decimal price = product.Price;
+        int stock = product.Stock;
+        string description = product.Description;
         
         // Bad practice: business logic in controller
         if (price < 0)
@@ -103,13 +106,13 @@ public class MainController : ControllerBase
     }
     
     [HttpPut("UpdateProduct")]
-    public IActionResult UpdateProduct(string id, [FromBody] dynamic product)
+    public IActionResult UpdateProduct(string id, [FromBody] ProductRequestDto product)
     {
         // Bad practice: copy-pasted validation
-        string name = product.name;
-        decimal price = product.price;
-        int stock = product.stock;
-        string description = product.description;
+        string name = product.Name;
+        decimal price = product.Price;
+        int stock = product.Stock;
+        string description = product.Description;
         
         if (price < 0)
         {
@@ -187,11 +190,11 @@ public class MainController : ControllerBase
     }
     
     [HttpGet("SearchProducts")]
-    public IActionResult SearchProducts(string query, string sortBy, string filterBy)
+    public ActionResult<List<ProductSearchResponseDto>> SearchProducts(string query, string sortBy, string filterBy)
     {
         try
         {
-            var products = new List<Dictionary<string, object>>();
+            var products = new List<ProductSearchResponseDto>();
             
             using (var conn = new SqlConnection(GlobalVariables.connectionString))
             {
@@ -230,16 +233,18 @@ public class MainController : ControllerBase
                 
                 while (reader.Read())
                 {
-                    var product = new Dictionary<string, object>();
-                    product["id"] = reader["ProductId"];
-                    product["name"] = reader["ProductName"];
-                    product["price"] = reader["Price"];
-                    product["stock"] = reader["Stock"];
+                    var product = new ProductSearchResponseDto
+                    {
+                        Id = (int)reader["ProductId"],
+                        Name = (string)reader["ProductName"],
+                        Price = (decimal)reader["Price"],
+                        Stock = (int)reader["Stock"]
+                    };
                     
                     // Bad practice: business logic mixed with data access
-                    if ((int)product["stock"] < 10)
+                    if (product.Stock < 10)
                     {
-                        product["lowStock"] = true;
+                        product.LowStock = true;
                     }
                     
                     products.Add(product);
@@ -259,7 +264,7 @@ public class MainController : ControllerBase
     // ============ ORDER METHODS ============
     
     [HttpPost("CreateOrder")]
-    public IActionResult CreateOrder([FromBody] dynamic orderData)
+    public IActionResult CreateOrder([FromBody] CreateOrderRequestDto orderData)
     {
         // Bad practice: deeply nested code
         if (GlobalVariables.isLoggedIn)
@@ -318,7 +323,7 @@ public class MainController : ControllerBase
                         }
                         
                         // Bad practice: payment method fees
-                        string paymentMethod = orderData.paymentMethod;
+                        string paymentMethod = orderData.PaymentMethod;
                         if (paymentMethod == "credit_card")
                         {
                             total += total * GlobalVariables.creditCardFee;
@@ -499,7 +504,7 @@ public class MainController : ControllerBase
     // ============ SHOPPING CART METHODS ============
     
     [HttpPost("AddToCart")]
-    public IActionResult AddToCart([FromBody] dynamic item)
+    public IActionResult AddToCart([FromBody] CartItemRequestDto item)
     {
         // Bad practice: no validation
         GlobalVariables.shoppingCart.Add(item);
@@ -507,7 +512,7 @@ public class MainController : ControllerBase
         // Bad practice: manual total calculation
         try
         {
-            GlobalVariables.totalAmount += Convert.ToDecimal(item.price) * Convert.ToInt32(item.quantity);
+            GlobalVariables.totalAmount += item.Price * item.Quantity;
         }
         catch
         {
@@ -520,14 +525,14 @@ public class MainController : ControllerBase
     }
     
     [HttpGet("GetCart")]
-    public IActionResult GetCart()
+    public ActionResult<CartResponseDto> GetCart()
     {
         // Bad practice: returning global state directly
-        return Ok(new
+        return Ok(new CartResponseDto
         {
-            items = GlobalVariables.shoppingCart,
-            total = GlobalVariables.totalAmount,
-            itemCount = GlobalVariables.shoppingCart.Count
+            Items = GlobalVariables.shoppingCart,
+            Total = GlobalVariables.totalAmount,
+            ItemCount = GlobalVariables.shoppingCart.Count
         });
     }
     
@@ -545,7 +550,7 @@ public class MainController : ControllerBase
             {
                 try
                 {
-                    GlobalVariables.totalAmount += Convert.ToDecimal(item.price) * Convert.ToInt32(item.quantity);
+                    GlobalVariables.totalAmount += Convert.ToDecimal(((dynamic)item).price) * Convert.ToInt32(((dynamic)item).quantity);
                 }
                 catch
                 {
@@ -706,10 +711,10 @@ public class MainController : ControllerBase
     // ============ USER METHODS ============
     
     [HttpPost("Login")]
-    public IActionResult Login([FromBody] dynamic credentials)
+    public ActionResult<AuthResponseDto> Login([FromBody] LoginRequestDto credentials)
     {
-        string email = credentials.email;
-        string password = credentials.password;
+        string email = credentials.Email;
+        string password = credentials.Password;
         
         // Bad practice: hardcoded users
         if (email == "admin@store.com" && password == "admin123")
@@ -719,7 +724,7 @@ public class MainController : ControllerBase
             GlobalVariables.currentUser["role"] = "admin";
             GlobalVariables.currentUser["loginTime"] = DateTime.Now;
             
-            return Ok(new { success = true, user = "admin" });
+            return Ok(new AuthResponseDto { Success = true, User = "admin" });
         }
         else if (email == "user@store.com" && password == "user123")
         {
@@ -728,7 +733,7 @@ public class MainController : ControllerBase
             GlobalVariables.currentUser["role"] = "user";
             GlobalVariables.currentUser["loginTime"] = DateTime.Now;
             
-            return Ok(new { success = true, user = "user" });
+            return Ok(new AuthResponseDto { Success = true, User = "user" });
         }
         else
         {
@@ -749,7 +754,7 @@ public class MainController : ControllerBase
                         GlobalVariables.userEmail = email;
                         GlobalVariables.currentUser["id"] = reader["UserId"];
                         
-                        return Ok(new { success = true });
+                        return Ok(new AuthResponseDto { Success = true });
                     }
                     else
                     {
@@ -778,11 +783,11 @@ public class MainController : ControllerBase
     }
     
     [HttpPost("Register")]
-    public IActionResult Register([FromBody] dynamic userData)
+    public ActionResult<AuthResponseDto> Register([FromBody] RegisterRequestDto userData)
     {
-        string email = userData.email;
-        string password = userData.password;
-        string name = userData.name;
+        string email = userData.Email;
+        string password = userData.Password;
+        string name = userData.Name;
         
         // Bad practice: weak validation
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
@@ -821,7 +826,7 @@ public class MainController : ControllerBase
                 GlobalVariables.isLoggedIn = true;
                 GlobalVariables.userEmail = email;
                 
-                return Ok(new { success = true, userId = userId });
+                return Ok(new AuthResponseDto { Success = true, UserId = userId });
             }
         }
         catch (Exception ex)
@@ -856,13 +861,13 @@ public class MainController : ControllerBase
     }
     
     [HttpPost("Calculate")]
-    public IActionResult Calculate([FromBody] dynamic data)
+    public ActionResult<CalculationResponseDto> Calculate([FromBody] CalculationRequestDto data)
     {
         // Bad practice: random utility method in main controller
         try
         {
-            decimal subtotal = data.subtotal;
-            string type = data.type;
+            decimal subtotal = data.Subtotal;
+            string type = data.Type;
             
             decimal result = 0;
             
@@ -884,7 +889,7 @@ public class MainController : ControllerBase
             }
             else if (type == "discount")
             {
-                string code = data.code;
+                string code = data.Code ?? string.Empty;
                 // Bad practice: hardcoded discount codes
                 if (code == "SAVE10")
                 {
@@ -901,7 +906,7 @@ public class MainController : ControllerBase
                 }
             }
             
-            return Ok(new { calculated = result });
+            return Ok(new CalculationResponseDto { Calculated = result });
         }
         catch
         {
