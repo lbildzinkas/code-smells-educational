@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # Bad practice: no network isolation, using default network
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: onlinestore-typescript-sqlserver
+    environment:
+      # Bad practice: hardcoded password in docker-compose
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=MyPass123!
+      - MSSQL_PID=Express
+    ports:
+      # Bad practice: exposing database port to host
+      - "1433:1433"
+    volumes:
+      # Bad practice: no named volumes, using bind mount
+      - ./database:/scripts
+      - ./sqldata:/var/opt/mssql/data
+    # Bad practice: no health check
+    # Bad practice: no resource limits
+    # Bad practice: running as root user
+    
+# Bad practice: no networks defined
+# Bad practice: no secrets management
